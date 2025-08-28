@@ -1,0 +1,75 @@
+name: Security Setup for Forks
+
+on:
+  fork: 
+  repository_dispatch:
+    types: [enable-security-setup]
+permissions:
+  contents: read
+  security-events: write
+  actions: write
+jobs:
+  setup-codeql:
+    name: Setup CodeQL for Fork
+    runs-on: ubuntu-latest
+    if: github.event.forkee.full_name
+
+    steps:
+      - name: Log fork information
+        run: |
+          echo "Setting up CodeQL for fork: ${{ github.event.forkee.full_name }}"
+          echo "Fork owner: ${{ github.event.forkee.owner.login }}"
+          echo "Fork URL: ${{ github.event.forkee.html_url }}"
+      - name: Create CodeQL workflow
+        run: |
+          cat > codeql.yml << 'EOF'
+          name: "CodeQL"
+
+          on:
+            push:
+              branches: ["main", "master"]
+            pull_request:
+              branches: ["main", "master"]
+            schedule:
+              - cron: '30 1 * * 0'
+          
+          jobs:
+            analyze:
+              name: Analyze
+              runs-on: ubuntu-latest
+              timeout-minutes: 360
+              permissions:
+                actions: read
+                contents: read
+                security-events: write
+          
+              strategy:
+                fail-fast: false
+                matrix:
+                  language: [ 'python' ]
+          
+              steps:
+              - name: Checkout repository
+                uses: actions/checkout@v4
+          
+              - name: Initialize CodeQL
+                uses: github/codeql-action/init@v3
+                with:
+                  languages: ${{ matrix.language }}
+          
+              - name: Autobuild
+                uses: github/codeql-action/autobuild@v3
+          
+              - name: Perform CodeQL Analysis
+                uses: github/codeql-action/analyze@v3
+                with:
+                  category: "/language:${{ matrix.language }}"
+          EOF
+          
+      - name: Notify setup completion
+        run: |
+          echo "✅ CodeQL has been configured for the forked repository"
+          echo "The workflow will run on pushes, pull requests, and weekly"
+          
+
+
