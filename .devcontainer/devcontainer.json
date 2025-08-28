@@ -8,8 +8,17 @@
 		"vscode": {
 			"extensions": [
 				"vsls-contrib.codetour",
-				"GitHub.copilot"
-			]
+				"GitHub.copilot",
+				"GitHub.copilot-chat"
+			],
+			"settings": {
+				"mcp.servers": {
+					"github": {
+						"type": "http",
+						"url": "https://api.githubcopilot.com/mcp/"
+					}
+				}
+			}
 		}
 	}
 
